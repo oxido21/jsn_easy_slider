@@ -33,6 +33,21 @@ defined('_JEXEC') or die('Restricted access');
                         <input type="checkbox" data-bind="hide" >
                     </div>
                 </div> <!-- row end -->
+                <!-- oxido callendar-->
+                <div class="row">
+                    <label class="col-xs-4"><?php echo JText::_('JSN_EASYSLIDER_DATE_START'); ?></label>
+                    <div class="col-xs-8">
+                        <input type="date" class="form-control input-xs" data-bind="start_date" placeholder="">
+                    </div>
+                </div> <!-- row end -->
+                <div class="row">
+                    <label class="col-xs-4"><?php echo JText::_('JSN_EASYSLIDER_DATE_END'); ?></label>
+                    <div class="col-xs-8">
+                        <input type="date" class="form-control input-xs" data-bind="end_date" placeholder="">
+                    </div>
+                </div>
+                <!-- EO oxido callendar-->
+                <!-- row end -->
                 <hr>
                 <div class="row">
 					<label class="col-xs-4">ID</label>

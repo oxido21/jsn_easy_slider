@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @version    $Id$
  * @package    JSN_EasySlider
@@ -9,35 +10,30 @@
  * Websites: http://www.joomlashine.com
  * Technical Support:  Feedback - http://www.joomlashine.com/contact-us/get-support.html
  */
-
 // No direct access to this file
 defined('_JEXEC') or die('Restricted access');
 
 include_once JPATH_ROOT . '/administrator/components/com_easyslider/classes/jsn.easyslider.slider.php';
 
-class JSNEasySliderRender
-{
+class JSNEasySliderRender {
     //private $_db = null;
     //private $_mediaObjectMicrodata = null;
     //private $_videoObjectMicrodata = null;
     //private $_imageObjectMicrodata = null;
-
     //private $_uriBase = '';
 
     /**
      * Contructor
      */
-    public function __construct()
-    {
+    public function __construct() {
         //$this->_db = JFactory::getDbo();
         //$this->_mediaObjectMicrodata = new JMicrodata('MediaObject');
         //$this->_videoObjectMicrodata = new JMicrodata('VideoObject');
         //$this->_imageObjectMicrodata = new JMicrodata('ImageObject');
-
         //$this->_uriBase = JURI::root();
         //$this->_uriBase = substr($this->_uriBase, strlen($this->_uriBase) - 1, strlen($this->_uriBase)) == '/' ?
-            //substr($this->_uriBase, 0, strlen($this->_uriBase) - 1) :
-            //$this->_uriBase;
+        //substr($this->_uriBase, 0, strlen($this->_uriBase) - 1) :
+        //$this->_uriBase;
     }
 
     /**
@@ -46,40 +42,66 @@ class JSNEasySliderRender
      *
      * @return (string)
      */
-    public function render($sliderID, $status = false)
-    {
-    	$content = '';
-    	
-    	if (is_numeric((int) $sliderID))
-        {
+    public function render($sliderID, $status = false) {
+        $content = '';
 
-        	$objJSNEasySliderSlider = new JSNEasySliderSlider();
-        	$data = $objJSNEasySliderSlider->getSliderInfoByID((int) $sliderID);
-        	
-        	if (count((array) $data))
-        	{
-        		if ($status)
-        		{
-	        		if (!(int) $data->published)
-	        		{
-	        			return $content;
-	        		}
-        		}
-        		
-	        	$randID	= $objJSNEasySliderSlider->randomString(10);
-	        	$this->_loadAssets();
-	        	$content	.= $this->renderArrow((int) $sliderID, $randID);
-				$content	.= $this->renderBody((int) $sliderID, $randID);
-				$content	.= $this->renderScriptTag((int) $sliderID, $randID, $data);
-        	}
+        if (is_numeric((int) $sliderID)) {
+
+            $objJSNEasySliderSlider = new JSNEasySliderSlider();
+            $data = $objJSNEasySliderSlider->getSliderInfoByID((int) $sliderID);
+
+            // oxido - accept only published by date items 
+            if (!empty($data->slider_data)) {
+                $slideuri = json_decode($data->slider_data);
+
+                $slideuri_valide = new stdClass();
+                $slides = array();
+                foreach ($slideuri->slides AS $key => $slide) {
+                    if (!empty($slide->start_date) && !empty($slide->end_date)) {
+
+                        // set default timezone
+                        date_default_timezone_set('Europe/Bucharest');
+                        //define date and time
+                        $date = date("Y-m-d");
+                        // output
+                        $today = strtotime($date);
+                        $DateStart = strtotime($slide->start_date);
+                        $DateEnd = strtotime($slide->end_date);
+                        
+                        
+                        if ($DateStart <= $today && $DateEnd >= $today) {
+                            array_push($slides, $slide);
+                        }
+                    }else{
+                        array_push($slides, $slide);
+                    }
+                }
+
+                $slideuri_valide->slides = $slides;
+                $data->slider_data = json_encode($slideuri_valide);
+            }
+            // EO oxido - accept only published by date items
+
+            if (count((array) $data)) {
+                if ($status) {
+                    if (!(int) $data->published) {
+                        return $content;
+                    }
+                }
+
+                $randID = $objJSNEasySliderSlider->randomString(10);
+                $this->_loadAssets();
+                $content .= $this->renderArrow((int) $sliderID, $randID);
+                $content .= $this->renderBody((int) $sliderID, $randID);
+                $content .= $this->renderScriptTag((int) $sliderID, $randID, $data);
+            }
         }
 
         return $content;
     }
 
-    public function renderArrow($sliderID, $randID)
-    {
-    	$content = '<div class="svg-wrap">
+    public function renderArrow($sliderID, $randID) {
+        $content = '<div class="svg-wrap">
 					<svg width="64" height="64" viewBox="0 0 64 64">
 						<path id="arrow-left-1" d="M46.077 55.738c0.858 0.867 0.858 2.266 0 3.133s-2.243 0.867-3.101 0l-25.056-25.302c-0.858-0.867-0.858-2.269 0-3.133l25.056-25.306c0.858-0.867 2.243-0.867 3.101 0s0.858 2.266 0 3.133l-22.848 23.738 22.848 23.738z" />
 					</svg>
@@ -111,13 +133,11 @@ class JSNEasySliderRender
 						<path id="arrow-right-5" d="M29.333 10.667q1.104 0 1.875 0.771l18.667 18.667q0.792 0.792 0.792 1.896t-0.792 1.896l-18.667 18.667q-0.771 0.771-1.875 0.771t-1.885-0.781-0.781-1.885q0-1.125 0.771-1.896l16.771-16.771-16.771-16.771q-0.771-0.771-0.771-1.896 0-1.146 0.76-1.906t1.906-0.76zM13.333 10.667q1.104 0 1.875 0.771l18.667 18.667q0.792 0.792 0.792 1.896t-0.792 1.896l-18.667 18.667q-0.771 0.771-1.875 0.771t-1.885-0.781-0.781-1.885q0-1.125 0.771-1.896l16.771-16.771-16.771-16.771q-0.771-0.771-0.771-1.896 0-1.146 0.76-1.906t1.906-0.76z" />
 					</svg>
 				</div>';
-    	return $content;
-    	
+        return $content;
     }
-    
-    public function renderBody($sliderID, $randID)
-    {
-    	$content = '<div id="jsn-es-slider-' . $sliderID . '_' . $randID.'" class="jsn-es-slider jsn-es-slider-' . $sliderID . '">
+
+    public function renderBody($sliderID, $randID) {
+        $content = '<div id="jsn-es-slider-' . $sliderID . '_' . $randID . '" class="jsn-es-slider jsn-es-slider-' . $sliderID . '">
 
 			<div class="jsn-es-viewport">
                 <div class="jsn-es-slide-progress">
@@ -176,48 +196,39 @@ class JSNEasySliderRender
         //fix render blurry text on iOS (safari)
 //        $content .= '<div class="render-text" style="position: fixed;top: 0;left: -1px; width: 1px; height: 1px;"></div>';
 
-    	return $content;
+        return $content;
     }
-    
-    public function renderScriptTag($sliderID, $randID, $slider)
-    {
-    	// Check if multi-lingual is enabled?
-    	if ( JLanguageMultilang::isEnabled() )
-    	{
-    		// Check if search engine friendly URL is enabled?
-    		if ( (int) JFactory::getApplication()->getCfg('sef') )
-    		{
-    			// Convert all relative image URL to absolute one to avoid being affected by language specific URL.
-    			if ( preg_match_all('/"(src|url)":"([^"]+)"/', $slider->slider_data, $matches, PREG_SET_ORDER) )
-    			{
-    				foreach ($matches as $match)
-    				{
-    					// Check if URL is relative?
-    					if ( ! preg_match('#^(https?:)?/#', $match[2]) )
-    					{
-    						$slider->slider_data = str_replace(
-    							$match[0],
-    							'"' . $match[1] . '":"' . JUri::root(true) . '/' . $match[2] . '"',
-    							$slider->slider_data
-    						);
-    					}
-    				}
-    			}
-    		}
-    	}
 
-        $app            = JFactory::getApplication(); 
+    public function renderScriptTag($sliderID, $randID, $slider) {
+        // Check if multi-lingual is enabled?
+        if (JLanguageMultilang::isEnabled()) {
+            // Check if search engine friendly URL is enabled?
+            if ((int) JFactory::getApplication()->getCfg('sef')) {
+                // Convert all relative image URL to absolute one to avoid being affected by language specific URL.
+                if (preg_match_all('/"(src|url)":"([^"]+)"/', $slider->slider_data, $matches, PREG_SET_ORDER)) {
+                    foreach ($matches as $match) {
+                        // Check if URL is relative?
+                        if (!preg_match('#^(https?:)?/#', $match[2])) {
+                            $slider->slider_data = str_replace(
+                                    $match[0],
+                                    '"' . $match[1] . '":"' . JUri::root(true) . '/' . $match[2] . '"',
+                                    $slider->slider_data
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        $app = JFactory::getApplication();
         $loadGoogleFont = $this->getDataConfig('load_google_font');
         $loadGoogleFont = isset($loadGoogleFont->value) ? (int) $loadGoogleFont->value : 1;
-        
-    	$content = '<script type="text/javascript">' . "\n";
-	    
-        if ($loadGoogleFont == 1 || $app->isAdmin())
-        {   
+
+        $content = '<script type="text/javascript">' . "\n";
+
+        if ($loadGoogleFont == 1 || $app->isAdmin()) {
             $content .= "\t\t\t\t\t" . 'var JSNEasySliderLoadGoogleFonts = true;' . "\n";
-        }
-        else
-        {
+        } else {
             $content .= "\t\t\t\t\t" . 'var JSNEasySliderLoadGoogleFonts = false;' . "\n";
         }
 
@@ -227,61 +238,59 @@ class JSNEasySliderRender
 	    			rootURL: "' . JURI::root() . '"
 	    		});
 	    	</script>';
-    	return $content;
+        return $content;
     }
-    
+
     /**
      * Load Assets
      */
-    protected function _loadAssets()
-    {
-        $pathOnly 	= JURI::root(true);
-        $pathRoot 	= JURI::root();
-        $document 	= JFactory::getDocument();
-		$app 		= JFactory::getApplication(); 
+    protected function _loadAssets() {
+        $pathOnly = JURI::root(true);
+        $pathRoot = JURI::root();
+        $document = JFactory::getDocument();
+        $app = JFactory::getApplication();
 
-		$loadFontAwesome = $this->getDataConfig('load_font_awesome');
-		$loadFontAwesome = isset($loadFontAwesome->value) ? (int) $loadFontAwesome->value : 1;
-		
+        $loadFontAwesome = $this->getDataConfig('load_font_awesome');
+        $loadFontAwesome = isset($loadFontAwesome->value) ? (int) $loadFontAwesome->value : 1;
+
         $document->addStyleSheet($pathOnly . '/plugins/system/easyslider/assets/css/easyslider.css?v=2.07');
         $document->addStyleSheet($pathOnly . '/plugins/system/easyslider/assets/lib/arrows-nav/css/component.css');
         $document->addStyleSheet($pathOnly . '/plugins/system/easyslider/assets/lib/dot-nav/css/component.css');
-        
-		if ($loadFontAwesome == 1 || $app->isAdmin())
-		{	
-			$document->addStyleSheet($pathOnly . '/plugins/system/easyslider/assets/lib/font-awesome/css/font-awesome.css');
-		}
+
+        if ($loadFontAwesome == 1 || $app->isAdmin()) {
+            $document->addStyleSheet($pathOnly . '/plugins/system/easyslider/assets/lib/font-awesome/css/font-awesome.css');
+        }
 
         $document->addScript($pathOnly . '/media/jui/js/jquery.min.js');
 
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/lib/underscore/underscore-min.js');
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/lib/backbone/backbone.js');
-        
+
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/lib/utils.js');
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/lib/jquery.js');
-        
+
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/lib/draggable.js');
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/lib/easing.js');
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/lib/tween.js');
-        
+
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/lib/model.js');
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/lib/view.js');
-        
+
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/conflict.js');
-        
+
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/model/core.js');
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/model/item.js');
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/model/slide.js');
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/model/slider.js');
-        
+
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/controller.js');
         $document->addScript($pathOnly . '/plugins/system/easyslider/assets/js/easyslider.js?v=2.07');
     }
-	
-	protected function getDataConfig($name)
-	{
-		$db = JFactory::getDBO();
-		$db->setQuery($db->getQuery(true)->select('*')->from($db->quoteName("#__jsn_easyslider_config"))->where($db->quoteName("name") . "=" . $db->quote($name)));
-		return $db->loadObject();
-	}	
+
+    protected function getDataConfig($name) {
+        $db = JFactory::getDBO();
+        $db->setQuery($db->getQuery(true)->select('*')->from($db->quoteName("#__jsn_easyslider_config"))->where($db->quoteName("name") . "=" . $db->quote($name)));
+        return $db->loadObject();
+    }
+
 }

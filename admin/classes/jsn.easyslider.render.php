@@ -54,6 +54,13 @@ class JSNEasySliderRender {
             if (!empty($data->slider_data)) {
                 $slideuri = json_decode($data->slider_data);
 
+                $config_slide = new stdClass();
+                $config_slide->custom_css = $slideuri->custom_css;
+                $config_slide->grid = $slideuri->grid;
+                $config_slide->layout = $slideuri->layout;
+                $config_slide->title = $slideuri->title;
+                $config_slide->version = $slideuri->version;
+
                 $slideuri_valide = new stdClass();
                 $slides = array();
                 foreach ($slideuri->slides AS $key => $slide) {
@@ -67,15 +74,16 @@ class JSNEasySliderRender {
                         $today = strtotime($date);
                         $DateStart = strtotime($slide->start_date);
                         $DateEnd = strtotime($slide->end_date);
-                        
-                        
+
                         if ($DateStart <= $today && $DateEnd >= $today) {
                             array_push($slides, $slide);
                         }
-                    }else{
+                    } else {
                         array_push($slides, $slide);
                     }
                 }
+
+                $slideuri_valide = $config_slide;
 
                 $slideuri_valide->slides = $slides;
                 $data->slider_data = json_encode($slideuri_valide);
